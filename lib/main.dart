@@ -490,27 +490,35 @@ class _InventoryPageState extends State<InventoryPage> {
     final name = item['itemName']?.toString() ?? 'Unnamed item';
     final sku = item['sku']?.toString() ?? '';
     final category = item['category']?.toString() ?? '';
+
     final quantity = (item['quantity'] as num?)?.toInt() ?? 0;
     final price = (item['unitPrice'] as num?)?.toDouble() ?? 0;
     final reorder = (item['reorderLevel'] as num?)?.toInt() ?? 0;
+
     final isLow = quantity <= reorder;
-    final createdAt = item['createdAt'];
 
-    String addedTime = 'Timestamp pending';
+    // Read Firestore timestamp
+    final dynamic rawTimestamp = item['createdAt'];
 
-    if (createdAt is Timestamp) {
-      final dateTime = createdAt.toDate().toLocal();
+    DateTime? dateTime;
 
-      final date =
-          '${dateTime.day.toString().padLeft(2, '0')}/'
-          '${dateTime.month.toString().padLeft(2, '0')}/'
-          '${dateTime.year}';
+    if (rawTimestamp is Timestamp) {
+      dateTime = rawTimestamp.toDate().toLocal();
+    } else if (rawTimestamp is DateTime) {
+      dateTime = rawTimestamp.toLocal();
+    }
 
-      final time =
-          '${dateTime.hour.toString().padLeft(2, '0')}:'
-          '${dateTime.minute.toString().padLeft(2, '0')}';
+    String addedTime = 'Date and time unavailable';
 
-      addedTime = 'Added on $date at $time';
+    if (dateTime != null) {
+      final day = dateTime.day.toString().padLeft(2, '0');
+      final month = dateTime.month.toString().padLeft(2, '0');
+      final year = dateTime.year;
+
+      final hour = dateTime.hour.toString().padLeft(2, '0');
+      final minute = dateTime.minute.toString().padLeft(2, '0');
+
+      addedTime = 'Added on $day/$month/$year at $hour:$minute';
     }
 
     return Container(
@@ -552,22 +560,11 @@ class _InventoryPageState extends State<InventoryPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$sku  •  $category',
+                      '$sku • $category',
                       style: const TextStyle(color: muted, fontSize: 12),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  const Icon(Icons.access_time_rounded, size: 15, color: teal),
-                  const SizedBox(width: 7),
-                  Text(
-                    addedTime,
-                    style: const TextStyle(color: muted, fontSize: 11),
-                  ),
-                ],
               ),
               if (isLow)
                 const Icon(
@@ -576,7 +573,9 @@ class _InventoryPageState extends State<InventoryPage> {
                 ),
             ],
           ),
+
           const Divider(height: 25, color: Color(0xFF29364E)),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -585,6 +584,33 @@ class _InventoryPageState extends State<InventoryPage> {
               itemMetric('REORDER', '$reorder'),
             ],
           ),
+
+          const SizedBox(height: 16),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            decoration: BoxDecoration(
+              color: teal.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.access_time_rounded, size: 16, color: teal),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    addedTime,
+                    style: const TextStyle(
+                      color: teal,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           if (isLow) ...[
             const SizedBox(height: 12),
             const Text(
