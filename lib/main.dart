@@ -494,6 +494,24 @@ class _InventoryPageState extends State<InventoryPage> {
     final price = (item['unitPrice'] as num?)?.toDouble() ?? 0;
     final reorder = (item['reorderLevel'] as num?)?.toInt() ?? 0;
     final isLow = quantity <= reorder;
+    final createdAt = item['createdAt'];
+
+    String addedTime = 'Timestamp pending';
+
+    if (createdAt is Timestamp) {
+      final dateTime = createdAt.toDate().toLocal();
+
+      final date =
+          '${dateTime.day.toString().padLeft(2, '0')}/'
+          '${dateTime.month.toString().padLeft(2, '0')}/'
+          '${dateTime.year}';
+
+      final time =
+          '${dateTime.hour.toString().padLeft(2, '0')}:'
+          '${dateTime.minute.toString().padLeft(2, '0')}';
+
+      addedTime = 'Added on $date at $time';
+    }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -539,6 +557,17 @@ class _InventoryPageState extends State<InventoryPage> {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(Icons.access_time_rounded, size: 15, color: teal),
+                  const SizedBox(width: 7),
+                  Text(
+                    addedTime,
+                    style: const TextStyle(color: muted, fontSize: 11),
+                  ),
+                ],
               ),
               if (isLow)
                 const Icon(
